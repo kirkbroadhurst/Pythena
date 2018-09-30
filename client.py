@@ -1,5 +1,6 @@
 import boto3
 
+
 class Client():
     def __init__(self, region, results):
         self.region = region
