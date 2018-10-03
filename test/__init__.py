@@ -33,13 +33,13 @@ def small_csv():
     Tests that we can select some data with the client
     """
     cleanup()
-    print('starting setup')
+    logger.debug('starting setup')
 
     # put the file onto s3
     datafile = os.path.join(cur_dir,
                             'data/small_unquoted.csv')
     s3.Bucket(bucket).upload_file(datafile, key)
-    print('uploaded file')
+    logger.debug('uploaded file')
 
     # create the table in Athena
     query = '''CREATE EXTERNAL TABLE `{db}`.`{table}`
@@ -51,20 +51,20 @@ def small_csv():
         tblproperties ("skip.header.line.count"="1")'''.format(
             db=database, table=table, bucket=bucket, path=path)
 
-    Client.athena_query('create database if not exists {}'.format(database))
-    print('created database')
+    Client().athena_query('create database if not exists {}'.format(database))
+    logger.debug('created database')
 
-    Client.athena_query(query)
-    print('created table')
+    Client().athena_query(query)
+    logger.debug('created table')
 
     yield
     cleanup()
 
 
 def cleanup():
-    Client.athena_query('drop database if exists {} cascade'.format(database))
-    print('dropped database')
+    Client().athena_query('drop database if exists {} cascade'.format(database))
+    logger.debug('dropped database')
 
     boto3.client('s3').delete_object(Bucket=bucket, Key=key)
-    print('deleted object')
+    logger.debug('deleted object')
 

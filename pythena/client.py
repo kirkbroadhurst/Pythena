@@ -1,5 +1,9 @@
 import boto3
+import io
 import logging
+import os
+import pandas as pd
+import re
 import time
 
 
@@ -50,11 +54,15 @@ class Client():
         return response
 
 
-    def athena_query(query):
+    def athena_query(self, query):
         """
         Send a query to Athena. Return the results as a string
         :query: SQL query to execute
         """
+
+        # if query is a select query use select values as column names
+        columns = self._get_column_names(query)
+
         logger.debug('running query {}'.format(query))
         result_config = {
             'OutputLocation': 's3://{}/outputlocation'.format(bucket),
@@ -79,5 +87,32 @@ class Client():
         key = path[path.find(bucket) + len(bucket) + 1:]
 
         logger.debug('results at {}'.format(path))
-        results = s3.Object(bucket, key).get()['Body'].read().decode('utf-8')
-        return results
+        results = s3.Object(bucket, key).get()['Body'].read()
+        logger.debug(results)
+
+        if len(results) > 0:
+            if self._is_select_query(query):
+                return pd.read_csv(io.BytesIO(results))
+            else:
+                return pd.read_csv(io.BytesIO(results), header=None)
+        return None
+
+
+    def _get_column_names(self, query):
+        """
+        Parses a SQL statement to return column names
+        """
+        if not self._is_select_query(query):
+            return None
+
+        q = query.strip().upper()
+        column_section = query[q.find('SELECT')+len('SELECT'):q.find('FROM')]
+        return list(filter(None, re.split('[, ]', column_section)))
+
+
+    def _is_select_query(self, query):
+        """
+        Check if the query is a select query
+        """
+        return query.split()[0].upper() == 'SELECT'
+
