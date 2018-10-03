@@ -51,10 +51,10 @@ def small_csv():
         tblproperties ("skip.header.line.count"="1")'''.format(
             db=database, table=table, bucket=bucket, path=path)
 
-    Client().athena_query('create database if not exists {}'.format(database))
+    Client(results=bucket).athena_query('create database if not exists {}'.format(database))
     logger.debug('created database')
 
-    Client().athena_query(query)
+    Client(results=bucket).athena_query(query)
     logger.debug('created table')
 
     yield
@@ -62,7 +62,7 @@ def small_csv():
 
 
 def cleanup():
-    Client().athena_query('drop database if exists {} cascade'.format(database))
+    Client(results=bucket).athena_query('drop database if exists {} cascade'.format(database))
     logger.debug('dropped database')
 
     boto3.client('s3').delete_object(Bucket=bucket, Key=key)

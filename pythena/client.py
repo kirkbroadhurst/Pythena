@@ -12,8 +12,6 @@ logger.setLevel(logging.DEBUG)
 console_handler = logging.StreamHandler()
 logger.addHandler(console_handler)
 
-bucket = 'pythena-int'
-
 s3 = boto3.resource('s3')
 
 
@@ -65,7 +63,7 @@ class Client():
 
         logger.debug('running query {}'.format(query))
         result_config = {
-            'OutputLocation': 's3://{}/outputlocation'.format(bucket),
+            'OutputLocation': 's3://{}/outputlocation'.format(self.results),
             'EncryptionConfiguration': { 'EncryptionOption': 'SSE_S3' }
         }
 
@@ -84,10 +82,10 @@ class Client():
 
         logger.debug('query completed')
         path = execution['ResultConfiguration']['OutputLocation']
-        key = path[path.find(bucket) + len(bucket) + 1:]
+        key = path[path.find(self.results) + len(self.results) + 1:]
 
         logger.debug('results at {}'.format(path))
-        results = s3.Object(bucket, key).get()['Body'].read()
+        results = s3.Object(self.results, key).get()['Body'].read()
         logger.debug(results)
 
         if len(results) > 0:
