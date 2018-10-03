@@ -17,9 +17,14 @@ class Client():
     """
     Main class for pythena use
     """
-    def __init__(self, region, results):
+    def __init__(self, results = None, region = None):
+        """
+        :results: s3 location to store results / output
+            - if empty must be set in PYTHENA_OUTPUTLOCATION variable
+        :region: AWS region; if empty will use default
+        """
         self.region = region
-        self.results = results
+        self.results = results or os.getenv('PYTHENA_OUTPUTLOCATION')
 
 
     def execute(self, query, **kwargs):
@@ -27,7 +32,12 @@ class Client():
         execute a query on athena
         :query: SQL query to execute
         """
-        client = boto3.client('athena', region_name=self.region)
+
+        if region != '':
+            client = boto3.client('athena', region_name=self.region)
+        else:
+            client = boto3.client('athena')
+
         response = client.start_query_execution(
             QueryString=query,
             ResultConfiguration={
@@ -40,19 +50,19 @@ class Client():
         return response
 
 
-    def athena_query(sql):
+    def athena_query(query):
         """
         Send a query to Athena. Return the results as a string
-        :sql: SQL query to execute
+        :query: SQL query to execute
         """
-        logger.debug('running query {}'.format(sql))
+        logger.debug('running query {}'.format(query))
         result_config = {
             'OutputLocation': 's3://{}/outputlocation'.format(bucket),
             'EncryptionConfiguration': { 'EncryptionOption': 'SSE_S3' }
         }
 
         client = boto3.client('athena')
-        result = client.start_query_execution(QueryString=sql,
+        result = client.start_query_execution(QueryString=query,
                                               ResultConfiguration=result_config)
 
         query_id = result['QueryExecutionId']
