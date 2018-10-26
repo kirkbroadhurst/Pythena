@@ -27,4 +27,4 @@ def test_parse_create():
     """ Test that a create query doesn't return columns """
     client = Client()
     columns = client._get_column_names('create table abc (id int) ')
-    assert columns == None
+    assert columns is None

@@ -67,4 +67,3 @@ def cleanup():
 
     boto3.client('s3').delete_object(Bucket=bucket, Key=key)
     logger.debug('deleted object')
-
