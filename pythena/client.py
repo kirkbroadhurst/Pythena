@@ -35,7 +35,7 @@ class Client():
         :query: SQL query to execute
         """
 
-        if region != '':
+        if self.region != '':
             client = boto3.client('athena', region_name=self.region)
         else:
             client = boto3.client('athena')
@@ -43,7 +43,7 @@ class Client():
         response = client.start_query_execution(
             QueryString=query,
             ResultConfiguration={
-                'OutputLocation': self.results,
+                'OutputLocation': 's3://{}/'.format(self.results),
                 'EncryptionConfiguration': {
                     'EncryptionOption': 'SSE_S3'
                 }
