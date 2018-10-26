@@ -35,6 +35,8 @@ class Client():
         :query: SQL query to execute
         """
 
+        logger.debug('running query {}'.format(query))
+
         if self.region != '':
             client = boto3.client('athena', region_name=self.region)
         else:
@@ -49,7 +51,26 @@ class Client():
                 }
             }, **kwargs)
         query_id = response['QueryExecutionId']
+
+        logger.debug('query submitted with id {}'.format(query_id))
         return query_id
+
+
+    def wait_for_results(self, query_id):
+        """
+        Wait for the results of an query
+        :query_id: the query_id we are waiting for
+        """
+        client = boto3.client('athena')
+
+        execution = client.get_query_execution(QueryExecutionId=query_id)['QueryExecution']
+
+        while (execution['Status']['State'] not in ['SUCCEEDED', 'FAILED']):
+            logger.debug('status: {}'.format(execution['Status']['State']))
+            time.sleep(1)
+            execution = client.get_query_execution(QueryExecutionId=query_id)['QueryExecution']
+
+        return execution
 
 
     def athena_query(self, query):
@@ -61,16 +82,9 @@ class Client():
         # if query is a select query use select values as column names
         columns = self._get_column_names(query)
 
-        logger.debug('running query {}'.format(query))
-        result_config = {
-            'OutputLocation': 's3://{}/outputlocation'.format(self.results),
-            'EncryptionConfiguration': { 'EncryptionOption': 'SSE_S3' }
-        }
+        query_id = self.execute(query)
 
         client = boto3.client('athena')
-
-        query_id = self.execute(query)
-        logger.debug('query submitted with id {}'.format(query_id))
         execution = client.get_query_execution(QueryExecutionId=query_id)['QueryExecution']
 
         while (execution['Status']['State'] not in ['SUCCEEDED', 'FAILED']):
