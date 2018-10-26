@@ -88,11 +88,10 @@ class Client():
         results = s3.Object(self.results, key).get()['Body'].read()
         logger.debug(results)
 
-        if len(results) > 0:
+        if any(results):
             if self._is_select_query(query):
                 return pd.read_csv(io.BytesIO(results))
-            else:
-                return pd.read_csv(io.BytesIO(results), header=None)
+            return pd.read_csv(io.BytesIO(results), header=None)
         return None
 
 
@@ -113,4 +112,3 @@ class Client():
         Check if the query is a select query
         """
         return query.split()[0].upper() == 'SELECT'
-

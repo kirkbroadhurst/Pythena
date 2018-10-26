@@ -43,4 +43,3 @@ def test_select_data(small_csv):
     print(result)
     print(type(result))
     assert len(result) == 3
-
