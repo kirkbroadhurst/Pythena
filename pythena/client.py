@@ -49,7 +49,7 @@ class Client():
                 }
             }, **kwargs)
         query_id = response['QueryExecutionId']
-        return response
+        return query_id
 
 
     def athena_query(self, query):
@@ -68,10 +68,8 @@ class Client():
         }
 
         client = boto3.client('athena')
-        result = client.start_query_execution(QueryString=query,
-                                              ResultConfiguration=result_config)
 
-        query_id = result['QueryExecutionId']
+        query_id = self.execute(query)
         logger.debug('query submitted with id {}'.format(query_id))
         execution = client.get_query_execution(QueryExecutionId=query_id)['QueryExecution']
 
