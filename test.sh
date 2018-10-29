@@ -3,10 +3,10 @@ if [ -z "$1" ]; then
     exit 1
 fi
 
-if python -m pytest; then
+if python -m pytest -k column; then
+    msg=$@
     git add .
-    git commit --allow-empty-message -m "($@)"
-    git push
+    git commit --allow-empty-message -m "$msg"
 else
     git reset --hard
 fi
