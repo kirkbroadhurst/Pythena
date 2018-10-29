@@ -7,12 +7,15 @@ from pythena import Client
 
 
 def test_wait(mocker):
+    """ 
+    Assert that for some good result, the wait function succeeds
+    """
     client = Client()
     mocker.patch.object(client.client, 'get_query_execution')
 
     response = {'QueryExecution': {'Status': {'State': 'SUCCEEDED'}}}
 
     client.client.get_query_execution.return_value = response
-    print(client.client.get_query_execution())
-    pass
 
+    result = client.wait_for_results('abc123')
+    assert result

@@ -81,13 +81,7 @@ class Client():
         columns = self._get_column_names(query)
 
         query_id = self.execute(query)
-
-        execution = self.client.get_query_execution(QueryExecutionId=query_id)['QueryExecution']
-
-        while (execution['Status']['State'] not in ['SUCCEEDED', 'FAILED']):
-            logger.debug('status: {}'.format(execution['Status']['State']))
-            time.sleep(1)
-            execution = self.client.get_query_execution(QueryExecutionId=query_id)['QueryExecution']
+        execution = self.wait_for_results(query_id)
 
         logger.debug('query completed')
         path = execution['ResultConfiguration']['OutputLocation']
