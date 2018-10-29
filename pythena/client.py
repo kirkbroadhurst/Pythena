@@ -25,7 +25,11 @@ class Client():
             - if empty must be set in PYTHENA_OUTPUTLOCATION variable
         :region: AWS region; if empty will use default
         """
-        self.region = region
+        if region != '':
+            self.client = boto3.client('athena', region_name=region)
+        else:
+            self.client = boto3.client('athena')
+
         self.results = results or os.getenv('PYTHENA_OUTPUTLOCATION')
 
 
@@ -37,12 +41,7 @@ class Client():
 
         logger.debug('running query {}'.format(query))
 
-        if self.region != '':
-            client = boto3.client('athena', region_name=self.region)
-        else:
-            client = boto3.client('athena')
-
-        response = client.start_query_execution(
+        response = self.client.start_query_execution(
             QueryString=query,
             ResultConfiguration={
                 'OutputLocation': 's3://{}/'.format(self.results),
@@ -61,14 +60,13 @@ class Client():
         Wait for the results of an query
         :query_id: the query_id we are waiting for
         """
-        client = boto3.client('athena')
 
-        execution = client.get_query_execution(QueryExecutionId=query_id)['QueryExecution']
+        execution = self.client.get_query_execution(QueryExecutionId=query_id)['QueryExecution']
 
         while (execution['Status']['State'] not in ['SUCCEEDED', 'FAILED']):
             logger.debug('status: {}'.format(execution['Status']['State']))
             time.sleep(1)
-            execution = client.get_query_execution(QueryExecutionId=query_id)['QueryExecution']
+            execution = self.client.get_query_execution(QueryExecutionId=query_id)['QueryExecution']
 
         return execution
 
@@ -84,13 +82,12 @@ class Client():
 
         query_id = self.execute(query)
 
-        client = boto3.client('athena')
-        execution = client.get_query_execution(QueryExecutionId=query_id)['QueryExecution']
+        execution = self.client.get_query_execution(QueryExecutionId=query_id)['QueryExecution']
 
         while (execution['Status']['State'] not in ['SUCCEEDED', 'FAILED']):
             logger.debug('status: {}'.format(execution['Status']['State']))
             time.sleep(1)
-            execution = client.get_query_execution(QueryExecutionId=query_id)['QueryExecution']
+            execution = self.client.get_query_execution(QueryExecutionId=query_id)['QueryExecution']
 
         logger.debug('query completed')
         path = execution['ResultConfiguration']['OutputLocation']
