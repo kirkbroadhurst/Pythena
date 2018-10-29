@@ -3,9 +3,10 @@ if [ -z "$1" ]; then
     exit 1
 fi
 
-if python -m pytest; then
+if python -m pytest ; then
+    msg=$@
     git add .
-    git commit --allow-empty-message -m "($@)"
+    git commit --allow-empty-message -m "$msg"
     git push
 else
     git reset --hard
