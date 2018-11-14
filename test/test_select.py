@@ -43,3 +43,13 @@ def test_select_data(small_csv):
     print(result)
     print(type(result))
     assert len(result) == 3
+
+
+def test_select_single_row(small_csv):
+    """
+    Tests that a where clause helps and works
+    """
+    query = 'select * from {}.{} where id = 1'.format(database, table)
+    result = Client(results='pythena-int').athena_query(query)
+    assert len(result) == 1
+    assert result['message'][0] == 'something great!'
