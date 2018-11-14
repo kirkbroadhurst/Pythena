@@ -25,7 +25,7 @@ class Client():
             - if empty must be set in PYTHENA_OUTPUTLOCATION variable
         :region: AWS region; if empty will use default
         """
-        if region != '':
+        if region:
             self.client = boto3.client('athena', region_name=region)
         else:
             self.client = boto3.client('athena')
@@ -64,6 +64,9 @@ class Client():
         execution = self.client.get_query_execution(QueryExecutionId=query_id)['QueryExecution']
 
         while (execution['Status']['State'] not in ['SUCCEEDED', 'FAILED']):
+            if execution['Status']['State'] == 'FAILED':
+                raise Exception(execution['Status'])
+
             logger.debug('status: {}'.format(execution['Status']['State']))
             time.sleep(1)
             execution = self.client.get_query_execution(QueryExecutionId=query_id)['QueryExecution']
@@ -76,7 +79,6 @@ class Client():
         Send a query to Athena. Return the results as a string
         :query: SQL query to execute
         """
-
         # if query is a select query use select values as column names
         columns = self._get_column_names(query)
 
