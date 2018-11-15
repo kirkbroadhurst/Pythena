@@ -1,5 +1,7 @@
 # Pythena
-Python library for Athena, extending functionality
+Python library for Athena, extending functionality.
+
+The main feature of this library right now is that it retrieves queries results via S3 call vs via Athena's JDBC connection. This can be significantly faster for large data sets.
 
 ## Requirements
 
